@@ -1,13 +1,16 @@
 package ru.netology.manager;
 
-import java.util.Arrays;
-import org.junit.jupiter.api.*;
-import ru.netology.domain.MovieItem;
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ru.netology.domain.Genre.*;
-import static ru.netology.manager.MovieManager.DEFAULT_FEED_SIZE;
+import static ru.netology.domain.Genre.ACTION;
+import static ru.netology.domain.Genre.COMEDY;
+import static ru.netology.domain.Genre.THRILLER;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import ru.netology.domain.MovieItem;
+import ru.netology.manager.MovieManager;
+import ru.netology.repository.MovieRepository;
 
 
 class MovieManagerTest {
@@ -15,50 +18,62 @@ class MovieManagerTest {
     private final MovieItem second = new MovieItem(2, "Мертвые не потеют 2", COMEDY);
     private final MovieItem third = new MovieItem(3, "Мертвые не потеют 3", THRILLER);
 
-    /*
-    Manager should get to the actual feed all the movies added in reverse order
-     */
-    @Test
-    void shouldGetAllByDefault() {
-        MovieManager manager = new MovieManager();
+    private final MovieRepository repo = new MovieRepository();
+    private final MovieManager manager = new MovieManager(repo);
+
+    @BeforeEach
+    public void setUp() {
         manager.add(first);
         manager.add(second);
         manager.add(third);
-
-        MovieItem[] actual = manager.getAll();
-        MovieItem[] expected = {third, second, first};
-
-        assertArrayEquals(expected, actual);
-
-        System.out.println("MovieManagerTest.getAllByDefault");
-        System.out.println(Arrays.toString(actual));
     }
 
-    /*
-    Manager should get to the feed only last two movies added in reverse order
-     */
-    @Test
-    void shouldGetAllWithParam() {
-        MovieManager manager = new MovieManager(2);
-        manager.add(first);
-        manager.add(second);
-        manager.add(third);
-
-        MovieItem[] actual = manager.getAll();
-        MovieItem[] expected = {third, second};
-
-        assertArrayEquals(expected, actual);
-
-        System.out.println("MovieManagerTest.getAllWithParam");
-        System.out.println(Arrays.toString(actual));
+    @AfterEach
+    void tearDown() {
+        repo.removeAll();
     }
 
-    /*
-    Basic Constructor sanity check
-     */
     @Test
-    void shouldCreateWithDefaultFeedSize() {
-        MovieManager man = new MovieManager(0);
-        assertEquals(DEFAULT_FEED_SIZE, man.getFEED_SIZE());
+    public void shouldRemoveIfExists() {
+        int idToRemove = 1;
+
+        manager.removeById(idToRemove);
+
+        var actual = manager.get();
+        var expected = new MovieItem[]{third, second};
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldNotRemoveIfNotExists() {
+        int idToRemove = 4;
+
+        manager.removeById(idToRemove);
+
+        var actual = manager.get(idToRemove);
+        var expected = new MovieItem[]{third, second, first};
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void shouldGetAll() {
+        int numberToShow = 0;
+
+        var actual = manager.get(numberToShow);
+        var expected = new MovieItem[]{third, second, first};
+
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void shouldGetSome() {
+        int numberToShow = 2;
+
+        var actual = manager.get(numberToShow);
+        var expected = new MovieItem[]{third, second};
+
+        assertArrayEquals(expected, actual);
     }
 }

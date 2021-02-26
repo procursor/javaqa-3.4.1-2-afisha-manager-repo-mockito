@@ -1,36 +1,40 @@
 package ru.netology.manager;
 
-import lombok.Getter;
-import lombok.val;
 import org.apache.commons.lang3.ArrayUtils;
 import ru.netology.domain.MovieItem;
+import ru.netology.repository.MovieRepository;
 
 public class MovieManager {
     static final int DEFAULT_FEED_SIZE = 10;
+    private final MovieRepository repository;
 
-    @Getter
-    @val int FEED_SIZE;
-    private MovieItem[] movies;
-
-    MovieManager(int moviesNumber) {
-        if (moviesNumber < 1) {
-            FEED_SIZE = DEFAULT_FEED_SIZE;
-        } else {
-            FEED_SIZE = moviesNumber;
-        }
-    }
-
-    MovieManager() {
-        FEED_SIZE = DEFAULT_FEED_SIZE;
+    public MovieManager(MovieRepository repository) {
+        this.repository = repository;
     }
 
     public void add(MovieItem item) {
-        movies = ArrayUtils.add(movies, item);
+        repository.save(item);
     }
 
-    public MovieItem[] getAll() {
-        var items = ArrayUtils.clone(movies);
+    public MovieItem[] get(int number) {
+        var items = get();
+
+        if (number > 0) {
+            items = ArrayUtils.subarray(items, 0, number);
+        }
+        return items;
+    }
+
+    public MovieItem[] get() {
+        var items = ArrayUtils.clone(repository.findAll());
+
         ArrayUtils.reverse(items);
-        return ArrayUtils.subarray(items, 0, FEED_SIZE);
+        items = ArrayUtils.subarray(items, 0, DEFAULT_FEED_SIZE);
+
+        return items;
+    }
+
+    public void removeById(int id) {
+        repository.removeById(id);
     }
 }
